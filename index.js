@@ -1,10 +1,19 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const app = express();
-dotenv.config();
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
-mongoose.connect(process.env.MONGO_URI , {
+const app = express();
+// dotenv.config();
+
+const config = require('./config/key');
+
+const {
+    User
+} = require('./models/user');
+
+mongoose.connect(config.mongoURI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
@@ -15,11 +24,33 @@ db.once('open', function () {
     console.log('Connected to MongoDBs');
 });
 
-app.get('/', (req, res ) => {
+//use
+app.use(bodyParser.urlencoded({
+    extended: true
+}))
+
+app.use(bodyParser.json());
+app.use(cookieParser());
+
+app.get('/', (req, res) => {
     res.send(`hello world`);
+});
+
+
+app.post('/api/users/register', (req, res) => {
+    const user = new User(req.body);
+
+    user.save((err, userData) => {
+        if (err) return res.json({
+            success: err
+        })
+    })
+    return res.status(200).json({
+        success:true
+    })
 });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log('server started on http://localhost:'+port);    
+    console.log('server started on http://localhost:' + port);
 });
